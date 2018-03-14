@@ -116,6 +116,10 @@ func StartFederationSyncController(kind string, adapterFactory federatedtypes.Ad
 	restclient.AddUserAgent(crConfig, userAgent)
 	crClient := crclientset.NewForConfigOrDie(crConfig)
 	adapter := adapterFactory(fedClient)
+	namespaceAdapter, ok := adapter.(*federatedtypes.FederatedNamespaceAdapter)
+	if ok {
+		namespaceAdapter.SetKubeClient(kubeClient)
+	}
 	controller := newFederationSyncController(adapter, fedClient, kubeClient, crClient)
 	if minimizeLatency {
 		controller.minimizeLatency()
@@ -153,7 +157,11 @@ func newFederationSyncController(adapter federatedtypes.FederatedTypeAdapter, fe
 	}
 	s.templateStore, s.templateController = newFedApiInformer(templateAdapter, deliverObj)
 	s.placementStore, s.placementController = newFedApiInformer(adapter.Placement(), deliverObj)
-	s.overrideStore, s.overrideController = newFedApiInformer(adapter.Override(), deliverObj)
+
+	override := adapter.Override()
+	if override != nil {
+		s.overrideStore, s.overrideController = newFedApiInformer(adapter.Override(), deliverObj)
+	}
 
 	targetAdapter := adapter.Target()
 	// Federated informer on the resource type in members of federation.
@@ -236,7 +244,9 @@ func (s *FederationSyncController) minimizeLatency() {
 func (s *FederationSyncController) Run(stopChan <-chan struct{}) {
 	go s.templateController.Run(stopChan)
 	go s.placementController.Run(stopChan)
-	go s.overrideController.Run(stopChan)
+	if s.overrideController != nil {
+		go s.overrideController.Run(stopChan)
+	}
 	s.informer.Start()
 	s.deliverer.StartWithHandler(func(item *util.DelayingDelivererItem) {
 		s.workQueue.Add(item)
@@ -393,9 +403,12 @@ func (s *FederationSyncController) reconcile(qualifiedName federatedtypes.Qualif
 		return statusError
 	}
 
-	override, err := s.objFromCache(s.overrideStore, kind, key)
-	if err != nil {
-		return statusError
+	var override pkgruntime.Object
+	if s.overrideStore != nil {
+		override, err = s.objFromCache(s.overrideStore, kind, key)
+		if err != nil {
+			return statusError
+		}
 	}
 
 	operationsAccessor := func(adapter federatedtypes.FederatedTypeAdapter, selectedClusters, unselectedClusters []string, template, placement, override pkgruntime.Object) ([]util.FederatedOperation, error) {
@@ -449,8 +462,6 @@ func (s *FederationSyncController) clusterNames() ([]string, error) {
 // delete deletes the given resource or returns error if the deletion was not complete.
 func (s *FederationSyncController) delete(template pkgruntime.Object, kind string, qualifiedName federatedtypes.QualifiedName) error {
 	glog.V(3).Infof("Handling deletion of %s %q", kind, qualifiedName)
-
-	// TOD(marun) Perform pre-deletion cleanup for the namespace adapter
 
 	_, err := s.deletionHelper.HandleObjectInUnderlyingClusters(template)
 	if err != nil {
