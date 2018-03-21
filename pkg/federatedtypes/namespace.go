@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	NamespaceKind          = "Namespace"
-	FederatedNamespaceKind = "Namespace"
+	NamespaceKind                   = "Namespace"
+	FederatedNamespacePlacementKind = "FederatedNamespacePlacement"
 )
 
 func init() {
@@ -140,7 +140,7 @@ func NewFederatedNamespacePlacement(client fedclientset.Interface) PlacementAdap
 }
 
 func (a *FederatedNamespacePlacement) Kind() string {
-	return "FederatedNamespacePlacement"
+	return FederatedNamespacePlacementKind
 }
 
 func (a *FederatedNamespacePlacement) ObjectMeta(obj pkgruntime.Object) *metav1.ObjectMeta {
@@ -240,9 +240,6 @@ func NewFederatedNamespaceObjectsForTest(namespace string, clusterNames []string
 	template = &apiv1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "test-namespace-",
-		},
-		Spec: apiv1.NamespaceSpec{
-			Finalizers: []apiv1.FinalizerName{apiv1.FinalizerKubernetes},
 		},
 	}
 

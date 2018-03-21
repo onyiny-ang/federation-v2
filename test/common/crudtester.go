@@ -174,11 +174,20 @@ func (c *FederatedTypeCrudTester) CheckPlacementChange(template, placement, over
 
 	clusterNames := adapter.ClusterNames(placement)
 
+	if kind == federatedtypes.FederatedNamespacePlacementKind && len(clusterNames) == 1 {
+		c.tl.Logf("Skipping %s placement update for %q due to single primary cluster",
+			kind, qualifiedName)
+		return
+	}
+
 	c.tl.Logf("Updating %s %q", kind, qualifiedName)
 	updatedPlacement, err := c.updateFedObject(adapter, placement, func(placement pkgruntime.Object) {
 		clusterNames := adapter.ClusterNames(placement)
 		// Remove a cluster name
-		clusterNames = append(clusterNames[:0], clusterNames[1:]...)
+		// TODO (font): Make sure to not remove the primary cluster. We assume
+		// the primary cluster is first in the list so we always keep it and
+		// remove the last value.
+		clusterNames = clusterNames[0:len(clusterNames)]
 		adapter.SetClusterNames(placement, clusterNames)
 	})
 	if err != nil {
