@@ -18,6 +18,7 @@ package framework
 
 import (
 	"fmt"
+	"time"
 
 	fedv1a1 "github.com/marun/fnord/pkg/apis/federation/v1alpha1"
 	"github.com/marun/fnord/pkg/controller/util"
@@ -90,6 +91,11 @@ func (f *FederationFixture) TearDown(tl common.TestLogger) {
 	}
 	for _, fixture := range fixtures {
 		fixture.TearDown(tl)
+		// Blocking IO to give cluster controller go routine the opportunity to
+		// shut down after closing its stop channel before API server is shut
+		// down. This helps avoid spurious connection errors when the target
+		// URLs become unavailable in API server.
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
