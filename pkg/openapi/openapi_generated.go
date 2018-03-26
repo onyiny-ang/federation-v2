@@ -1929,14 +1929,13 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 				SchemaProps: spec.SchemaProps{
 					Description: "FederatedSecretSpec defines the desired state of FederatedSecret",
 					Properties: map[string]spec.Schema{
-						"Template": {
+						"template": {
 							SchemaProps: spec.SchemaProps{
 								Description: "Template to derive per-cluster secret from",
 								Ref:         ref("k8s.io/api/core/v1.Secret"),
 							},
 						},
 					},
-					Required: []string{"Template"},
 				},
 			},
 			Dependencies: []string{
