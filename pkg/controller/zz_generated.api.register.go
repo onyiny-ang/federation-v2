@@ -20,17 +20,17 @@ package controller
 
 import (
 	"github.com/kubernetes-incubator/apiserver-builder/pkg/controller"
-	"github.com/marun/fnord/pkg/controller/federatedconfigmap"
-	"github.com/marun/fnord/pkg/controller/federatedconfigmapoverride"
-	"github.com/marun/fnord/pkg/controller/federatedconfigmapplacement"
-	"github.com/marun/fnord/pkg/controller/federatednamespaceplacement"
-	"github.com/marun/fnord/pkg/controller/federatedreplicaset"
-	"github.com/marun/fnord/pkg/controller/federatedreplicasetoverride"
-	"github.com/marun/fnord/pkg/controller/federatedreplicasetplacement"
-	"github.com/marun/fnord/pkg/controller/federatedsecret"
-	"github.com/marun/fnord/pkg/controller/federatedsecretoverride"
-	"github.com/marun/fnord/pkg/controller/federatedsecretplacement"
-	"github.com/marun/fnord/pkg/controller/sharedinformers"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/federatedconfigmap"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/federatedconfigmapoverride"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/federatedconfigmapplacement"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/federatednamespaceplacement"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/federatedreplicaset"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/federatedreplicasetoverride"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/federatedreplicasetplacement"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/federatedsecret"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/federatedsecretoverride"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/federatedsecretplacement"
+	"github.com/kubernetes-sigs/federation-v2/pkg/controller/sharedinformers"
 	"k8s.io/client-go/rest"
 )
 

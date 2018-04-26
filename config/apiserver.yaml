@@ -1,0 +1,187 @@
+
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1alpha1.federation.k8s.io
+  labels:
+    api: federation
+    apiserver: "true"
+spec:
+  version: v1alpha1
+  group: federation.k8s.io
+  groupPriorityMinimum: 2000
+  priority: 200
+  service:
+    name: federation
+    namespace: federation
+  versionPriority: 10
+  caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURxakNDQXBLZ0F3SUJBZ0lKQU1iNmpoaTZxaCtCTUEwR0NTcUdTSWIzRFFFQkN3VUFNR294Q3pBSkJnTlYKQkFZVEFuVnVNUXN3Q1FZRFZRUUlEQUp6ZERFS01BZ0dBMVVFQnd3QmJERUtNQWdHQTFVRUNnd0JiekVMTUFrRwpBMVVFQ3d3Q2IzVXhLVEFuQmdOVkJBTU1JR1psWkdWeVlYUnBiMjR0WTJWeWRHbG1hV05oZEdVdFlYVjBhRzl5CmFYUjVNQjRYRFRFNE1EUXlOakl4TURRek9Wb1hEVEU1TURReU5qSXhNRFF6T1Zvd2FqRUxNQWtHQTFVRUJoTUMKZFc0eEN6QUpCZ05WQkFnTUFuTjBNUW93Q0FZRFZRUUhEQUZzTVFvd0NBWURWUVFLREFGdk1Rc3dDUVlEVlFRTApEQUp2ZFRFcE1DY0dBMVVFQXd3Z1ptVmtaWEpoZEdsdmJpMWpaWEowYVdacFkyRjBaUzFoZFhSb2IzSnBkSGt3CmdnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUUMvTWxrOXhBVDFOejNLbXZNVGJ5RDgKTjIwbGZyQXoySkxRNUtSQnZMTUFaVmdDV0ZNUW5YczZVMkNvUGVPYWMxZW1ZT3FLUTF3MkFOaWJ4SFhjWEYzZwpqTVNkNXk2ZmZiY1pnLy9xOU1tejRPYW90OWlXNW1GMTk2Q2hteDYyR2JlVTd2cG5YRmhOUzZvUkpJLzZBOEVICkhUTnc4OWtoR3hreFgveUQyalRKOHBzSmZaUTlJS1FvUTIwc0h1NWtxS004M3JBRzJJYUhNbytSZnVTWkhMQkUKSUZQcEJmek1kSGNITDVtaFB0NzNmc2dxRXBldTZzbXIvR0Nkc3drdkplZUx0Vi9tWUtTTDN4aCsxWlU0UENsNQpGNEo0RFhXZFZQQjlyWndCS2h3bnpkSVdzU1FLMnVIZWVrbDhyTDRRczBlNjlvU0ZqZGt0clI0ZldzMlJ2ZTJOCkFnTUJBQUdqVXpCUk1CMEdBMVVkRGdRV0JCU1NLbkpCRDhweUFCUExLcCtiVWpDakpOMlRZakFmQmdOVkhTTUUKR0RBV2dCU1NLbkpCRDhweUFCUExLcCtiVWpDakpOMlRZakFQQmdOVkhSTUJBZjhFQlRBREFRSC9NQTBHQ1NxRwpTSWIzRFFFQkN3VUFBNElCQVFCWW42c1hKWE1XOFdGRVpvVExLYU1CZDMzRmJ4d1drYkQyaXB2Sk5KMStqeXYxCjFNQTNxd3RHdVgwQW9tTmlnNGtTcndLMjFwM0hCdWtKZDVFbTlna01BVlpsS1pQS05wSEI1bTRFUVpKTlRQTEcKNEVmbmJIRVVtb2d0bnV6Q0xQU0kySys2WXlJL1hMS3hVaW5wYVlPMnE3aDMxTmROdFdGVVFkRlNXY08wREc2aQpvYnFvOHlNWGZFYk9LV0VUTEVKbGJNR2RjeGZBdkxwdGpDZXZwN1VibmFCb1B6WFB2WSthVW9BNkx3SEd1TzJoCktkYW9Sa1ZZQ0JoWGszc2RkclJONENMdUJ3OTVJZXVrM3R2WjNqUUh4MnRMWWV0K1kydkVTZnRJSmRiTzZaMSsKVWMwbHNLQ1pZanIwbG13ck9EVzhvczhlVTFldVN6bVhiSEJleldDYwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: federation
+  namespace: federation
+  labels:
+    api: federation
+    apiserver: "true"
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    api: federation
+    apiserver: "true"
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: federation
+  namespace: federation
+  labels:
+    api: federation
+    apiserver: "true"
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        api: federation
+        apiserver: "true"
+    spec:
+      containers:
+      - name: apiserver
+        image: gcr.io/jiji-168714/federation-vs:kubecon
+        volumeMounts:
+        - name: apiserver-certs
+          mountPath: /apiserver.local.config/certificates
+          readOnly: true
+        command:
+        - "./apiserver"
+        args:
+        - "--etcd-servers=http://etcd-svc:2379"
+        - "--tls-cert-file=/apiserver.local.config/certificates/tls.crt"
+        - "--tls-private-key-file=/apiserver.local.config/certificates/tls.key"
+        - "--audit-log-path=-"
+        - "--audit-log-maxage=0"
+        - "--audit-log-maxbackup=0"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 20Mi
+          limits:
+            cpu: 100m
+            memory: 30Mi
+      - name: controller
+        image: gcr.io/jiji-168714/federation-vs:kubecon
+        command:
+        - "./controller-manager"
+        args:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 20Mi
+          limits:
+            cpu: 100m
+            memory: 30Mi
+      volumes:
+      - name: apiserver-certs
+        secret:
+          secretName: federation
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: etcd
+  namespace: federation
+spec:
+  serviceName: "etcd"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: etcd
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: etcd
+        image: quay.io/coreos/etcd:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 20Mi
+          limits:
+            cpu: 100m
+            memory: 30Mi
+        env:
+        - name: ETCD_DATA_DIR
+          value: /etcd-data-dir
+        command:
+        - /usr/local/bin/etcd
+        - --listen-client-urls
+        - http://0.0.0.0:2379
+        - --advertise-client-urls
+        - http://localhost:2379
+        ports:
+        - containerPort: 2379
+        volumeMounts:
+        - name: etcd-data-dir
+          mountPath: /etcd-data-dir
+        readinessProbe:
+          httpGet:
+            port: 2379
+            path: /health
+          failureThreshold: 1
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
+        livenessProbe:
+          httpGet:
+            port: 2379
+            path: /health
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
+  volumeClaimTemplates:
+  - metadata:
+     name: etcd-data-dir
+     annotations:
+        volume.beta.kubernetes.io/storage-class: standard
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+         storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd-svc
+  namespace: federation
+  labels:
+    app: etcd
+spec:
+  ports:
+  - port: 2379
+    name: etcd
+    targetPort: 2379
+  selector:
+    app: etcd
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: federation
+  namespace: federation
+  labels:
+    api: federation
+    apiserver: "true"
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURTVENDQWpFQ0NRQzl0ZnY0TzFveDBqQU5CZ2txaGtpRzl3MEJBUXNGQURCcU1Rc3dDUVlEVlFRR0V3SjEKYmpFTE1Ba0dBMVVFQ0F3Q2MzUXhDakFJQmdOVkJBY01BV3d4Q2pBSUJnTlZCQW9NQVc4eEN6QUpCZ05WQkFzTQpBbTkxTVNrd0p3WURWUVFERENCbVpXUmxjbUYwYVc5dUxXTmxjblJwWm1sallYUmxMV0YxZEdodmNtbDBlVEFlCkZ3MHhPREEwTWpZeU1UQTBNemxhRncweE9UQTBNall5TVRBME16bGFNR014Q3pBSkJnTlZCQVlUQW5WdU1Rc3cKQ1FZRFZRUUlEQUp6ZERFS01BZ0dBMVVFQnd3QmJERUtNQWdHQTFVRUNnd0JiekVMTUFrR0ExVUVDd3dDYjNVeApJakFnQmdOVkJBTU1HV1psWkdWeVlYUnBiMjR1Wm1Wa1pYSmhkR2x2Ymk1emRtTXdnZ0VpTUEwR0NTcUdTSWIzCkRRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRQy9JUWdyZlZOTlNUNDRITjZwQWxkbFZiaDhHR1d4ZjJTS2hlLysKc3N4VkVvanF2RmF0OWM2U2Y1Tzg0QnI2RkJZUFdGVGEzYWErSGhiTzE3aVRkRzJxWFhVRktKbWNONlpaVU9KcQpKRldJMk9RSnBGcEV6LzRLMlA0NXU2RDNObjNLa0M4YmJsNXBOYk9ZMXRMakNnV2hiQmk1SVYva0d5cXdjbzV0CnF3TG0wbWhFLzlBNEZPZlRvR3dPR2ZlVHd4YlRSQkRRN3hNYWRUMk0vQnkvOEgyWnMvV3RKZWZxNUdXYjV2bEgKYkZ0RjFJS1AxcjhSWXRCT1dDb2RWS0lVL3lMUWo3SmViK1dIR1A1S1NpYkNiam9yTEVmRzd1NGcycnlUMzlMaQpnaWJKTW82b3pSNUlpS1hiTHpRZ1BwVHp4Q1V6eDFZWkg3YnYrc0hiRnh6L1A0OXBBZ01CQUFFd0RRWUpLb1pJCmh2Y05BUUVMQlFBRGdnRUJBQ1pJV3dXbTJZc3g0VHg0V0NHMlNJSTF5OXMrSzJYaXNZWm9XRTVMK3JYVWNBSSsKM04yWi9rMU10K2hjYzdmZ0U2eWl2REJTY2JrYm93ajdkQjZSN1lYWVozUHhITGZXU1NqbUxiK0NDa2pZSE9LMQo1d01DVGFRWE1UaVZBTHFyVE9CeWRpWW9MenVyT0w5R0hRYkRBTUtjZHlPclFtdmYzdzdjelc4bHIrc0c1b0ZzCjdFd0JPS2NtLzdZbXVId2xQNW84NVN4NUpja0ZpMWtHZXBUZWI4RW4xYkxjRzZKZDVVcGtCdExvTWo4RktCNjMKTUZsQVlIMjRGWERNWkRZOUlWOVNIQ2RoNjNqeGtmNmVuYk14OE8wY2pvb1RnNThYN0dacTBlUDFFa1FPT1NYdwp3TmJTQjNMODkxUnF5dklrWnhGb3A1aGdQc2Z6VDl6L2pDWHlzdkU9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2UUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktjd2dnU2pBZ0VBQW9JQkFRQy9JUWdyZlZOTlNUNDQKSE42cEFsZGxWYmg4R0dXeGYyU0toZS8rc3N4VkVvanF2RmF0OWM2U2Y1Tzg0QnI2RkJZUFdGVGEzYWErSGhiTwoxN2lUZEcycVhYVUZLSm1jTjZaWlVPSnFKRldJMk9RSnBGcEV6LzRLMlA0NXU2RDNObjNLa0M4YmJsNXBOYk9ZCjF0TGpDZ1doYkJpNUlWL2tHeXF3Y281dHF3TG0wbWhFLzlBNEZPZlRvR3dPR2ZlVHd4YlRSQkRRN3hNYWRUMk0KL0J5LzhIMlpzL1d0SmVmcTVHV2I1dmxIYkZ0RjFJS1AxcjhSWXRCT1dDb2RWS0lVL3lMUWo3SmViK1dIR1A1SwpTaWJDYmpvckxFZkc3dTRnMnJ5VDM5TGlnaWJKTW82b3pSNUlpS1hiTHpRZ1BwVHp4Q1V6eDFZWkg3YnYrc0hiCkZ4ei9QNDlwQWdNQkFBRUNnZ0VBV2ZMMndGamo2bHlNL3FWL21MUzBZc2w3NEZNdkVPRHVkVTdoaXRHazNtaXgKclI5ai84ek9JaDRPYm5aZDI5RzJMQlNiSXNIcjVrK00xbDJwelNPZk5PMTAxQyt1VTFuUlhQbDNCUk1DZWp2dwozaVRPSXRKc01iaTd0SG44SUR3eDZUSUFLWDNBeXV6dUVBRVNFSzIzeHFkejN6UzR4MGFOeWFxd0l5YTNYOTlYCmZ4M2lBdTBQZGswem9tS2ZUNWxtb1dwa2RtV0xZa2tDMndxWGhicXVjU2lkTDFGV1ZTQ2o3TFNmdnppSHNLdVcKZHVXTG5HOXhaZEFIRWVVL3VCOXJCc1U5YnAybjRBTUd3Vm5lK2RPQW1YT3g2emRNSE5qVHJxcVltbmFCcllzRApPeXpoSkpyS1Exc05rTGdDYU1paXRicy9FZHl2bXNmdE5zSS9OZGgyY1FLQmdRRHJTYzRrVkNaU3RsWUNuU3dpClBOUk5TSktIMFN2QjZCcy9BNzBNSlJNUURaR0p4QWFad3pSbXU0WFJBVC9GdytCeW0xV29FOVcvNDVETGpIY2QKVzZ5bGtPU1RmUkZtcFVUcTl5YmFzTkNZbkdsT2E0cHlwZ3ZZdWhydW5CKzhCbkVPNUZ5c0tpc2FiRUtXKzVpWQovR2JXakdyMHBLZGpyOVJqRHV3OUkyRGExUUtCZ1FEUDlCcERuQWNRaG80cWg2Q3Z1dUJ0R3VZMVp2ZGlzZGlhClZCMGF2cmc5OXRrdjErZE9zdkJCS3FDdXVvNU5SU3RmZ2UzNWdCWVZaU0dWaTkvU0hvaFNqU29OYU9yV2hISGUKNGEvWkxFdnQvbUVCUUVwM2s5VmVOd2JYa1NhZEY1Z0FIbGhTc3Q4Um5xd1FpcFhmYUVkWFVPWXAvQWQvZ0xxQwpzclVPQmZSRVJRS0JnQ1V3d2xPOXRWMEhreXJRbXlSQ1J6QjhFeVZDcTg3M21DN3FzVndWRkNGS2M4RzU2VzB1CmpMN2NUemVOSWY1cGlyV3kxZVErVm1BQllXYTdLaXpLeTh4VHpiMStYRnpFTE5PVEEySTM1cERvMEVCa0FUdEUKQWNWZERWcS85TWdzb0h4QkhtRGNQWG5zdU0zU3NQa2xsRCsvYkR5Rk5pd3NvNzZRb2tpN3FkaU5Bb0dBUjFzagpoLytLRFFtZXpza3JRaUdGME9waUJBRUk4anpFYm5CZWJFYjFRWTNxaUpnMUxyUUg3TlNMdm1rVld6NVkyN1RoCnk3TS80S2VMRnAyZ2Q2RXlkZUVxaE45emRaaU0ya1htNlVaaDU1QmFDT3Zlb1ptQXBZdU1OWHdCRy9aMG1kWFAKeU5ESDZtdmY3dTBlOEVILytONHhuRVoyN0RGbnptRXo3MVBydFdFQ2dZRUFnVTFGTHdKVE1BVjZCUWthdTFVWQp1Y3BUd0EzalZlZ0RmeHRvVXBOUkxlTlduM3UrSURsLzRkVWhHL3loa0FubUhVVDdjL3Mvc01hK0NacERQSGJDClphR0twZFQ0Z1ZjY2dmNzZiREtuV0tKcnZYUFI1WFRkSlBkbEZVbjBrZm9ONk1reTJQVms2SkMzY0RpVE1STUwKdVg2TXZuQ2ZDNklhazI5ZTBsT0s0UjA9Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K
