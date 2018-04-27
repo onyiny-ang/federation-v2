@@ -32,7 +32,7 @@ export GOPATH=~/src/v2
 export GOBIN=~/src/v2/bin
 
 NS=federation
-IMAGE_NAME="gcr.io/jiji-168714/federation:v2"
+IMAGE_NAME="gcr.io/jiji-168714/federation-v2:kubecon"
 
 CONTEXT="us-west"
 CONTEXT2="us-east"
