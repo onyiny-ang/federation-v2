@@ -31,8 +31,8 @@ printf "\n vim configs/federatedreplicaset-override.yaml\n"
 vim configs/federatedreplicaset-override.yaml
 read -n 1 -s
 
-#printf "\nkubectl create -f ./configs/\n"
-#kubectl create -f ./configs/
+printf "\nkubectl create -f ./configs/\n"
+kubectl create -f ./configs/
 
 read -n 1 -s
 
