@@ -17,12 +17,10 @@ limitations under the License.
 package framework
 
 import (
-	"path"
+	"net/url"
 
 	"github.com/kubernetes-sig-testing/frameworks/integration"
 	"github.com/kubernetes-sigs/federation-v2/test/common"
-	"github.com/pborman/uuid"
-	"k8s.io/apiserver/pkg/storage/storagebackend"
 )
 
 var (
@@ -43,10 +41,17 @@ func SetUpEtcd(tl common.TestLogger) string {
 	return etcd.URL.String()
 }
 
-func SharedEtcd() storagebackend.Config {
-	cfg := storagebackend.NewDefaultConfig(path.Join(uuid.New(), "registry"), nil)
-	cfg.ServerList = []string{etcd.URL.String()}
-	return cfg
+func EtcdURL(tl common.TestLogger) *url.URL {
+	if etcd == nil {
+		etcd = &integration.Etcd{}
+		err := etcd.Start()
+		if err != nil {
+			etcd = nil
+			tl.Fatalf("Error starting etcd: %v", err)
+		}
+	}
+	refCount += 1
+	return etcd.URL
 }
 
 func TearDownEtcd(tl common.TestLogger) {

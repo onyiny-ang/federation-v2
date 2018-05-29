@@ -101,7 +101,8 @@ required = ["github.com/kubernetes/repo-infra/verify/boilerplate/test"]
 
 [[constraint]]
   name = "k8s.io/cluster-registry"
-  version = "=v0.0.5"
+  source = "github.com/marun/cluster-registry"
+  branch = "vendorable"
 
 [[constraint]]
   branch = "master"

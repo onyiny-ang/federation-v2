@@ -17,18 +17,26 @@ limitations under the License.
 package framework
 
 import (
+	"fmt"
+	"net/url"
+	"os"
+
+	"github.com/kubernetes-sig-testing/frameworks/integration"
+	"github.com/kubernetes-sigs/kubebuilder/pkg/test"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/cluster-registry/pkg/apis/clusterregistry/v1alpha1"
+	crv1alpha1 "k8s.io/cluster-registry/pkg/client/clientset/versioned/typed/clusterregistry/v1alpha1"
+
 	"github.com/kubernetes-sigs/federation-v2/test/common"
 	"k8s.io/client-go/rest"
-	clusterregistryclientset "k8s.io/cluster-registry/pkg/client/clientset/versioned/typed/clusterregistry/v1alpha1"
-	kubeapi "k8s.io/kubernetes/cmd/kube-apiserver/app/testing"
 )
 
 // ClusterRegistryApiFixture manages a api registry apiserver
 type ClusterRegistryApiFixture struct {
-	EtcdUrl             string
+	EtcdUrl             *url.URL
 	Host                string
 	SecureConfigFixture *SecureConfigFixture
-	ClusterRegistryApi  *kubeapi.TestServer
+	ClusterRegistryApi  *test.TestEnvironment
 }
 
 func SetUpClusterRegistryApiFixture(tl common.TestLogger) *ClusterRegistryApiFixture {
@@ -40,72 +48,62 @@ func SetUpClusterRegistryApiFixture(tl common.TestLogger) *ClusterRegistryApiFix
 func (f *ClusterRegistryApiFixture) setUp(tl common.TestLogger) {
 	defer TearDownOnPanic(tl, f)
 
-	//	f.EtcdUrl = SetUpEtcd(tl)
-	//	f.SecureConfigFixture = SetUpSecureConfigFixture(tl)
+	f.EtcdUrl = EtcdURL(tl)
+	f.SecureConfigFixture = SetUpSecureConfigFixture(tl)
 
 	// TODO(marun) ensure resiliency in the face of another process
 	// taking the port
 
-	//	port, err := FindFreeLocalPort()
-	//	if err != nil {
-	//		tl.Fatal(err)
-	//	}
+	port, err := FindFreeLocalPort()
+	if err != nil {
+		tl.Fatal(err)
+	}
 
-	//	bindAddress := "127.0.0.1"
-	//	f.Host = fmt.Sprintf("https://%s:%d", bindAddress, port)
-	//	url, err := url.Parse(f.Host)
-	//	if err != nil {
-	//		tl.Fatalf("Error parsing url: %v", err)
-	//	}
+	bindAddress := "127.0.0.1"
+	f.Host = fmt.Sprintf("https://%s:%d", bindAddress, port)
+	url, err := url.Parse(f.Host)
+	if err != nil {
+		tl.Fatalf("Error parsing url: %v", err)
+	}
 
-	//	args := []string{
-	//		"--etcd-servers", f.EtcdUrl,
-	//		"--client-ca-file", f.SecureConfigFixture.CACertFile,
-	//		"--cert-dir", f.SecureConfigFixture.CertDir,
-	//		"--bind-address", bindAddress,
-	//		"--secure-port", strconv.Itoa(port),
-	//		"--etcd-prefix", uuid.New(),
-	//	}
+	testenv := &test.TestEnvironment{
+		ControlPlane: integration.ControlPlane{
+			APIServer: &integration.APIServer{
+				URL:     url,
+				CertDir: f.SecureConfigFixture.CertDir,
+				EtcdURL: f.EtcdUrl,
+				Out:     os.Stdout,
+				Err:     os.Stderr,
+			},
+		},
+		CRDs: []*v1beta1.CustomResourceDefinition{&v1alpha1.ClusterCRD}}
 
-	//	apiServer := &integration.APIServer{
-	//		Name: "clusterregistry",
-	//		URL:  url,
-	//		Args: args,
-	//		Out:  os.Stdout,
-	//		Err:  os.Stderr,
-	//	}
-	//	err = apiServer.Start()
-	//	if err != nil {
-	//		tl.Fatalf("Error starting api registry apiserver: %v", err)
-	//	}
-	//	f.ClusterRegistryApi = apiServer
-
-	f.ClusterRegistryApi = kubeapiservertesting.StartTestServerOrDie(tl, nil, nil, SharedEtcd())
-	//f.ClusterRegistryApi, err = clusterregistryclientset.NewForConfig(result.ClientConfig)
-	//if err != nil {
-	//	t.Fatalf("Unexpected error: %v", err)
-	//}
+	_, err = testenv.Start()
+	if err != nil {
+		tl.Fatalf("Unexpected error: %v", err)
+	}
+	f.ClusterRegistryApi = testenv
 }
 
 func (f *ClusterRegistryApiFixture) TearDown(tl common.TestLogger) {
 	if f.ClusterRegistryApi != nil {
-		f.ClusterRegistryApi.TearDownFn()
+		f.ClusterRegistryApi.Stop()
 		f.ClusterRegistryApi = nil
 	}
 	if f.SecureConfigFixture != nil {
 		f.SecureConfigFixture.TearDown(tl)
 		f.SecureConfigFixture = nil
 	}
-	if len(f.EtcdUrl) > 0 {
-		TearDownEtcd(tl)
-		f.EtcdUrl = ""
-	}
+	//	if len(f.EtcdUrl) > 0 {
+	//		TearDownEtcd(tl)
+	//		f.EtcdUrl = ""
+	//	}
 }
 
-func (f *ClusterRegistryApiFixture) NewClient(tl common.TestLogger, userAgent string) *clusterregistryclientset.ClusterregistryV1alpha1Client {
-	config := f.NewConfig(tl)
-	rest.AddUserAgent(config, userAgent)
-	return clusterregistryclientset.NewForConfigOrDie(config)
+func (f *ClusterRegistryApiFixture) NewClient(tl common.TestLogger, userAgent string) *crv1alpha1.ClusterregistryV1alpha1Client {
+	config := f.ClusterRegistryApi.Config
+	client, _ := crv1alpha1.NewForConfig(config)
+	return client
 }
 
 func (f *ClusterRegistryApiFixture) NewConfig(tl common.TestLogger) *rest.Config {
