@@ -34,6 +34,7 @@ import (
 // ClusterRegistryApiFixture manages a api registry apiserver
 type ClusterRegistryApiFixture struct {
 	EtcdUrl             *url.URL
+	EtcdString          string
 	Host                string
 	SecureConfigFixture *SecureConfigFixture
 	ClusterRegistryApi  *test.TestEnvironment
@@ -49,6 +50,7 @@ func (f *ClusterRegistryApiFixture) setUp(tl common.TestLogger) {
 	defer TearDownOnPanic(tl, f)
 
 	f.EtcdUrl = EtcdURL(tl)
+	f.EtcdString = SetUpEtcd(tl)
 	f.SecureConfigFixture = SetUpSecureConfigFixture(tl)
 
 	// TODO(marun) ensure resiliency in the face of another process
@@ -76,6 +78,9 @@ func (f *ClusterRegistryApiFixture) setUp(tl common.TestLogger) {
 				Err:     os.Stderr,
 			},
 		},
+		Config: &rest.Config{
+			Host: f.Host,
+		},
 		CRDs: []*v1beta1.CustomResourceDefinition{&v1alpha1.ClusterCRD}}
 
 	_, err = testenv.Start()
@@ -94,10 +99,10 @@ func (f *ClusterRegistryApiFixture) TearDown(tl common.TestLogger) {
 		f.SecureConfigFixture.TearDown(tl)
 		f.SecureConfigFixture = nil
 	}
-	//	if len(f.EtcdUrl) > 0 {
-	//		TearDownEtcd(tl)
-	//		f.EtcdUrl = ""
-	//	}
+	if len(f.EtcdString) > 0 {
+		TearDownEtcd(tl)
+		f.EtcdString = ""
+	}
 }
 
 func (f *ClusterRegistryApiFixture) NewClient(tl common.TestLogger, userAgent string) *crv1alpha1.ClusterregistryV1alpha1Client {
