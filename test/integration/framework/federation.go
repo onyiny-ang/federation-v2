@@ -127,6 +127,7 @@ func (f *FederationFixture) registerCluster(tl common.TestLogger, host string) s
 	cluster, err := crClient.Clusters("federation").Create(&crv1a1.Cluster{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "test-cluster-",
+			Namespace:    "federation",
 		},
 		Spec: crv1a1.ClusterSpec{
 			KubernetesAPIEndpoints: crv1a1.KubernetesAPIEndpoints{

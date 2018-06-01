@@ -706,6 +706,7 @@
   packages = [
     "pkg/apis/apiextensions",
     "pkg/apis/apiextensions/v1beta1",
+    "pkg/client/clientset/clientset",
     "pkg/client/clientset/clientset/scheme",
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
   ]
@@ -1033,6 +1034,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "55411d9f41657f03897db6729d2dd4d132edae9b909c82e3226cc29d0dbbb781"
+  inputs-digest = "58f8cfe6cde3303127863d3e40e7f7a33b1583453b5938660b4c90cc0ec29715"
   solver-name = "gps-cdcl"
   solver-version = 1
