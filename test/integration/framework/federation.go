@@ -25,10 +25,10 @@ import (
 	"github.com/kubernetes-sigs/federation-v2/test/common"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	crv1a1 "k8s.io/cluster-registry/pkg/apis/clusterregistry/v1alpha1"
 )
 
 // TODO(marun) In fedv1 namespace cleanup required that a kube api
@@ -124,26 +124,22 @@ func (f *FederationFixture) AddMemberCluster(tl common.TestLogger) string {
 func (f *FederationFixture) registerCluster(tl common.TestLogger, host string) string {
 	// Registry the kube api with the cluster registry
 	crClient := f.CrApi.NewClient(tl, userAgent)
-	cluster, err := crClient.Clusters("federation").Create(&crv1a1.Cluster{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "test-cluster-",
-			Namespace:    "federation",
-		},
-		Spec: crv1a1.ClusterSpec{
-			KubernetesAPIEndpoints: crv1a1.KubernetesAPIEndpoints{
-				ServerEndpoints: []crv1a1.ServerAddressByClientCIDR{
-					{
-						ClientCIDR:    "0.0.0.0/0",
-						ServerAddress: host,
-					},
-				},
+	cluster, err := crClient.Resources("federation").Create(&unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"kind":       "Cluster",
+			"apiVersion": "clusterregistry.k8s.io/v1alpha1",
+			"metadata": map[string]interface{}{
+				"namespace":    "federation",
+				"generateName": "test-cluster-",
 			},
 		},
 	})
 	if err != nil {
 		tl.Fatal(err)
 	}
-	return cluster.Name
+	tl.Log("cluster: %v", cluster)
+	tl.Log("cluster: %v", cluster.Object["metadata"].(map[string]interface{})["generateName"].(string))
+	return cluster.Object["metadata"].(map[string]interface{})["generateName"].(string)
 }
 
 // createSecret creates a secret resource containing the credentials
