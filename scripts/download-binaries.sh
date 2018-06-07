@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+<<<<<<< HEAD
+=======
 # Copyright 2018 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+>>>>>>> upstream/master
 # This script automates the download of binaries used by deployment
 # and testing of federation.
 
@@ -21,7 +24,11 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+<<<<<<< HEAD
+# Use DEBUG=1 ./bin/download-binaries.sh to get debug output
+=======
 # Use DEBUG=1 ./scripts/download-binaries.sh to get debug output
+>>>>>>> upstream/master
 curl_args="-Ls"
 [[ -z "${DEBUG:-""}" ]] || {
   set -x
@@ -35,7 +42,11 @@ logEnd() {
 }
 trap 'logEnd $?' EXIT
 
+<<<<<<< HEAD
+# Use BASE_URL=https://my/binaries/url ./bin/download-binaries to download
+=======
 # Use BASE_URL=https://my/binaries/url ./scripts/download-binaries to download
+>>>>>>> upstream/master
 # from a different bucket
 : "${BASE_URL:="https://storage.googleapis.com/k8s-c10s-test-binaries"}"
 
@@ -61,14 +72,22 @@ curl "${curl_args}" "$kubectl_url" --output "$kubectl_dest"
 
 crc_dest="${dest_dir}/crinit"
 crc_tgz="clusterregistry-client.tar.gz"
+<<<<<<< HEAD
+crc_url="https://storage.googleapis.com/crreleases/v0.0.3/${crc_tgz}"
+=======
 crc_url="https://storage.googleapis.com/crreleases/v0.0.4/${crc_tgz}"
+>>>>>>> upstream/master
 curl "${curl_args}O" "${crc_url}" \
   && tar -xzf "${crc_tgz}" -C "${dest_dir}" ./crinit \
   && rm "${crc_tgz}"
 
 crs_dest="${dest_dir}/clusterregistry"
 crs_tgz="clusterregistry-server.tar.gz"
+<<<<<<< HEAD
+crs_url="https://storage.googleapis.com/crreleases/v0.0.3/${crs_tgz}"
+=======
 crs_url="https://storage.googleapis.com/crreleases/v0.0.4/${crs_tgz}"
+>>>>>>> upstream/master
 curl "${curl_args}O" "${crs_url}" \
   && tar -xzf "${crs_tgz}" -C "${dest_dir}" ./clusterregistry \
   && rm "${crs_tgz}"
