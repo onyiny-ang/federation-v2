@@ -112,6 +112,14 @@ go build -o bin/kubefnord cmd/kubefnord/kubefnord.go
 CONTEXT="$(kubectl config current-context)"
 ./bin/kubefnord join "${CONTEXT}" --host-cluster-context "${CONTEXT}" --add-to-registry --v=2
 
+if [ -z "$JOIN_CLUSTERS" ]
+then
+      echo "\$JOIN_CLUSTERS is empty"
+      exit 0
+else
+      echo "\$JOIN_CLUSTERS is NOT empty"
+fi
+
 for c in ${JOIN_CLUSTERS}; do
     ./bin/kubefnord join "${c}" --host-cluster-context "${CONTEXT}" --add-to-registry --v=2
 done
