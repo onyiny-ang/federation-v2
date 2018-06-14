@@ -41,10 +41,21 @@ kubectl create -f ./scripts/update-configs/federateddeployment-template.yaml
 kubectl create -f ./scripts/update-configs/federateddeployment-placement.yaml
 
 read -n 1 -s
+printf "\n Create nginx service in the federation\n"
+read -n 1 -s
+printf "\n Federated service template file\n"
+read -n 1 -s
+vim scripts/update-configs/federatedservice-template.yaml
+printf "\n Federated service placement file\n"
+read -n 1 -s
+vim scripts/update-configs/federatedservice-placement.yaml
+kubectl create -f ./scripts/update-configs/federatedservice-template.yaml
+kubectl create -f ./scripts/update-configs/federatedservice-placement.yaml
+read -n 1 -s
 
 printf "Deployment of nginx for existing contexts\n"
 read -n 1 -s
-for r in deploy; do
+for r in deploy services; do
     for c in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do
         echo; echo ------------ ${c} ------------; echo
         kubectl --context=${c} -n test-namespace get ${r}
@@ -70,7 +81,7 @@ while ! [ $replicas -eq 9 ]; do
   if [ -z "$replicas" ]; then
     replicas=0
   fi
-  for r in deploy; do
+  for r in deploy services; do
     for c in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do
         echo; echo ------------ ${c} ------------; echo
         kubectl --context=${c} -n test-namespace get ${r}
@@ -93,7 +104,13 @@ while [ $replicas -eq 9 ]; do
   if [ -z "$replicas" ]; then
     replicas=0
   fi
-  for i in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do echo; echo ------------ ${i} ------------; echo; kubectl --context ${i} -n ${NS} get rs; echo; echo; done
+  for r in deploy services; do
+    for c in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do
+        echo; echo ------------ ${c} ------------; echo
+        kubectl --context=${c} -n test-namespace get ${r}
+        echo; echo
+    done
+  done
   sleep 7s
 done
 read -n 1 -s
@@ -108,7 +125,13 @@ while ! [ $replicas -eq 9 ]; do
   if [ -z "$replicas" ]; then
     replicas=0
   fi
-  for i in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do echo; echo ------------ ${i} ------------; echo; kubectl --context ${i} -n ${NS} get rs; echo; echo; done
+  for r in deploy services; do
+    for c in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do
+        echo; echo ------------ ${c} ------------; echo
+        kubectl --context=${c} -n test-namespace get ${r}
+        echo; echo
+    done
+  done
   sleep 8s
 done
 printf "\nSuccessfully restored eu-central\n"
