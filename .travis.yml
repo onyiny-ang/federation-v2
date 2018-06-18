@@ -12,6 +12,7 @@ install:
 script:
   - ./scripts/pre-commit.sh
   - vendor/github.com/kubernetes/repo-infra/verify/verify-boilerplate.sh -- rootdir="$GOPATH/src/github.com/kubernetes-sigs/federation-v2" -v
+  - ./imagebuild.sh
 # TBD. Suppressing for now.
 notifications:
   email: false
