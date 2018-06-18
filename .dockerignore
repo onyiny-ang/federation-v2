@@ -1,0 +1,6 @@
+#Ignore the following when building the container
+example
+examples
+scripts
+bin
+bazel-*
