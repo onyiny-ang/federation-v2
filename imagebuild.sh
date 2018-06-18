@@ -6,25 +6,37 @@
 #  Author:  Lindsey Tulloch , ltulloch@redhat.com
 #  CREATED:  2018-06-15 11:47:57 AM EDT
 
-set -e
+set -o errexit
+set -o nounset
+set -o pipefail
 
 REGISTRY="quay.io"
-REPO=
+REPO="onyiny_ang"
 IMAGE="federation-v2"
 TAG="proto"
 
-IMAGE="$REGISTRY/$REPO/$IMAGE:$TAG"
-root_dir="$(pwd)"
-temp_dir="${root_dir}/build"
+root_dir="$(cd "$(dirname "$0")/.." ; pwd)"
+base_dir="${root_dir}/federation-v2/bin"
+cd "$base_dir" || {
+  echo "Cannot cd to '$base_dir'. Aborting." >&2
+  exit 1
 
-echo "Building controller manager"
-go build -o ${temp_dir}/controller-manager ${root_dir}/cmd/controller-manager/main.go
-echo "Building apiserver"
-go build -o ${temp_dir}/apiserver ${root_dir}/cmd/apiserver/main.go
+}
+ls -l
+cd ${root_dir}
+
+IMAGE="$REGISTRY/$REPO/$IMAGE:$TAG"
+temp_dir="build/temp"
+
+mkdir -p ${temp_dir}
+echo "Copy apiserver"
+cp ${base_dir}/apiserver ${temp_dir}/apiserver
+echo "Copy controller manager"
+cp ${base_dir}/controller-manager ${temp_dir}/controller-manager
 echo "Building Federation-v2 docker image"
 docker build  .
 echo "Pushing build to container registry"
-docker push quay.io/onyiny_ang/federation-v2:openshift-update
+docker push ${IMAGE}
 
 "Removing temp file"
 rm -rf ${temp_dir}
