@@ -26,6 +26,8 @@ import (
 	fakemulticlusterdnsv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned/typed/multiclusterdns/v1alpha1/fake"
 	schedulingv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned/typed/scheduling/v1alpha1"
 	fakeschedulingv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned/typed/scheduling/v1alpha1/fake"
+	statusv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned/typed/status/v1alpha1"
+	fakestatusv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned/typed/status/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -102,4 +104,14 @@ func (c *Clientset) SchedulingV1alpha1() schedulingv1alpha1.SchedulingV1alpha1In
 // Scheduling retrieves the SchedulingV1alpha1Client
 func (c *Clientset) Scheduling() schedulingv1alpha1.SchedulingV1alpha1Interface {
 	return &fakeschedulingv1alpha1.FakeSchedulingV1alpha1{Fake: &c.Fake}
+}
+
+// StatusV1alpha1 retrieves the StatusV1alpha1Client
+func (c *Clientset) StatusV1alpha1() statusv1alpha1.StatusV1alpha1Interface {
+	return &fakestatusv1alpha1.FakeStatusV1alpha1{Fake: &c.Fake}
+}
+
+// Status retrieves the StatusV1alpha1Client
+func (c *Clientset) Status() statusv1alpha1.StatusV1alpha1Interface {
+	return &fakestatusv1alpha1.FakeStatusV1alpha1{Fake: &c.Fake}
 }

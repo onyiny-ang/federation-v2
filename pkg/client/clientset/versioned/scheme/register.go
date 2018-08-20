@@ -22,6 +22,7 @@ import (
 	corev1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/core/v1alpha1"
 	multiclusterdnsv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/multiclusterdns/v1alpha1"
 	schedulingv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/scheduling/v1alpha1"
+	statusv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/status/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -55,4 +56,5 @@ func AddToScheme(scheme *runtime.Scheme) {
 	corev1alpha1.AddToScheme(scheme)
 	multiclusterdnsv1alpha1.AddToScheme(scheme)
 	schedulingv1alpha1.AddToScheme(scheme)
+	statusv1alpha1.AddToScheme(scheme)
 }

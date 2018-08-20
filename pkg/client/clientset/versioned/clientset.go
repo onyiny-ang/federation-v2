@@ -23,6 +23,7 @@ import (
 	corev1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned/typed/core/v1alpha1"
 	multiclusterdnsv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned/typed/multiclusterdns/v1alpha1"
 	schedulingv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned/typed/scheduling/v1alpha1"
+	statusv1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned/typed/status/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -39,6 +40,9 @@ type Interface interface {
 	SchedulingV1alpha1() schedulingv1alpha1.SchedulingV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Scheduling() schedulingv1alpha1.SchedulingV1alpha1Interface
+	StatusV1alpha1() statusv1alpha1.StatusV1alpha1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Status() statusv1alpha1.StatusV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -48,6 +52,7 @@ type Clientset struct {
 	coreV1alpha1            *corev1alpha1.CoreV1alpha1Client
 	multiclusterdnsV1alpha1 *multiclusterdnsv1alpha1.MulticlusterdnsV1alpha1Client
 	schedulingV1alpha1      *schedulingv1alpha1.SchedulingV1alpha1Client
+	statusV1alpha1          *statusv1alpha1.StatusV1alpha1Client
 }
 
 // CoreV1alpha1 retrieves the CoreV1alpha1Client
@@ -83,6 +88,17 @@ func (c *Clientset) Scheduling() schedulingv1alpha1.SchedulingV1alpha1Interface 
 	return c.schedulingV1alpha1
 }
 
+// StatusV1alpha1 retrieves the StatusV1alpha1Client
+func (c *Clientset) StatusV1alpha1() statusv1alpha1.StatusV1alpha1Interface {
+	return c.statusV1alpha1
+}
+
+// Deprecated: Status retrieves the default version of StatusClient.
+// Please explicitly pick a version.
+func (c *Clientset) Status() statusv1alpha1.StatusV1alpha1Interface {
+	return c.statusV1alpha1
+}
+
 // Discovery retrieves the DiscoveryClient
 func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 	if c == nil {
@@ -111,6 +127,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.statusV1alpha1, err = statusv1alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(&configShallowCopy)
 	if err != nil {
@@ -127,6 +147,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 	cs.coreV1alpha1 = corev1alpha1.NewForConfigOrDie(c)
 	cs.multiclusterdnsV1alpha1 = multiclusterdnsv1alpha1.NewForConfigOrDie(c)
 	cs.schedulingV1alpha1 = schedulingv1alpha1.NewForConfigOrDie(c)
+	cs.statusV1alpha1 = statusv1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -138,6 +159,7 @@ func New(c rest.Interface) *Clientset {
 	cs.coreV1alpha1 = corev1alpha1.New(c)
 	cs.multiclusterdnsV1alpha1 = multiclusterdnsv1alpha1.New(c)
 	cs.schedulingV1alpha1 = schedulingv1alpha1.New(c)
+	cs.statusV1alpha1 = statusv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs
