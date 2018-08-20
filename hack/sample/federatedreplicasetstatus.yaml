@@ -1,0 +1,6 @@
+apiVersion: status.federation.k8s.io/v1alpha1
+kind: FederatedReplicaSetStatus
+metadata:
+  name: federatedreplicasetstatus-example
+spec:
+  foo: bar

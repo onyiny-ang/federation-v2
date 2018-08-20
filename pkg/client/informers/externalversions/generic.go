@@ -24,6 +24,7 @@ import (
 	v1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/core/v1alpha1"
 	multiclusterdns_v1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/multiclusterdns/v1alpha1"
 	scheduling_v1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/scheduling/v1alpha1"
+	status_v1alpha1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/status/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -113,6 +114,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=scheduling.federation.k8s.io, Version=v1alpha1
 	case scheduling_v1alpha1.SchemeGroupVersion.WithResource("replicaschedulingpreferences"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Scheduling().V1alpha1().ReplicaSchedulingPreferences().Informer()}, nil
+
+		// Group=status.federation.k8s.io, Version=v1alpha1
+	case status_v1alpha1.SchemeGroupVersion.WithResource("federatedreplicasetstatuses"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Status().V1alpha1().FederatedReplicaSetStatuses().Informer()}, nil
 
 	}
 
