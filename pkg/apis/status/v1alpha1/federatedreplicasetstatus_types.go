@@ -20,21 +20,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!
-// Created by "kubebuilder create resource" for you to implement the FederatedReplicaSetStatus resource schema definition
-// as a go struct.
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // FederatedReplicaSetStatusSpec defines the desired state of FederatedReplicaSetStatus
 type FederatedReplicaSetStatusSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "kubebuilder generate" to regenerate code after modifying this file
 }
 
 // FederatedReplicaSetStatusStatus defines the observed state of FederatedReplicaSetStatus
 type FederatedReplicaSetStatusStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "kubebuilder generate" to regenerate code after modifying this file
+	ClusterStatuses []FederatedClusterStatus `json:"federatedClusterStatus,omitempty"`
+}
+
+// FederatedClusterStatus defines name and replica status of clusters in replicaset
+type FederatedClusterStatus struct {
+	// clusterName is the name of the cluster
+	ClusterName string `json:"clusterName,omitempty"`
+	// replicas is the number of replicas in the cluster at the time of reconciliation by the controller.
+	Replicas int32 `json:"replicas" protobuf:"varint,2,opt,name=replicas"`
+	// readyReplicas is the number of replicas in the cluster that have a Ready Condition.
+	ReadyReplicas int32 `json:"readyReplicas,omitempty" protobuf:"varint,3,opt,name=readyReplicas"`
 }
 
 // +genclient
