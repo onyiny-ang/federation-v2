@@ -81,9 +81,11 @@ var (
 				Plural: "federatedreplicasetstatuses",
 			},
 			Scope: "Namespaced",
+			Subresources: &v1beta1.CustomResourceSubresources{
+				Status: &v1beta1.CustomResourceSubresourceStatus{},
+			},
 			Validation: &v1beta1.CustomResourceValidation{
 				OpenAPIV3Schema: &v1beta1.JSONSchemaProps{
-					Type: "object",
 					Properties: map[string]v1beta1.JSONSchemaProps{
 						"apiVersion": v1beta1.JSONSchemaProps{
 							Type: "string",
@@ -99,8 +101,32 @@ var (
 							Properties: map[string]v1beta1.JSONSchemaProps{},
 						},
 						"status": v1beta1.JSONSchemaProps{
-							Type:       "object",
-							Properties: map[string]v1beta1.JSONSchemaProps{},
+							Type: "object",
+							Properties: map[string]v1beta1.JSONSchemaProps{
+								"federatedClusterStatus": v1beta1.JSONSchemaProps{
+									Type: "array",
+									Items: &v1beta1.JSONSchemaPropsOrArray{
+										Schema: &v1beta1.JSONSchemaProps{
+											Type: "object",
+											Properties: map[string]v1beta1.JSONSchemaProps{
+												"clusterName": v1beta1.JSONSchemaProps{
+													Type: "string",
+												},
+												"readyReplicas": v1beta1.JSONSchemaProps{
+													Type:   "integer",
+													Format: "int32",
+												},
+												"replicas": v1beta1.JSONSchemaProps{
+													Type:   "integer",
+													Format: "int32",
+												},
+											},
+											Required: []string{
+												"replicas",
+											}},
+									},
+								},
+							},
 						},
 					},
 				},
