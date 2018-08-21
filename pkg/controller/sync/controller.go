@@ -25,10 +25,13 @@ import (
 	"github.com/kubernetes-sigs/federation-v2/pkg/apis/core/common"
 	"github.com/kubernetes-sigs/federation-v2/pkg/apis/core/typeconfig"
 	fedv1a1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/core/v1alpha1"
+	frstatv1a1 "github.com/kubernetes-sigs/federation-v2/pkg/apis/status/v1alpha1"
 	fedclientset "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned"
+	status "github.com/kubernetes-sigs/federation-v2/pkg/client/clientset/versioned/typed/status/v1alpha1"
 	"github.com/kubernetes-sigs/federation-v2/pkg/controller/sync/placement"
 	"github.com/kubernetes-sigs/federation-v2/pkg/controller/util"
 	"github.com/kubernetes-sigs/federation-v2/pkg/controller/util/deletionhelper"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -93,6 +96,10 @@ type FederationSyncController struct {
 	// Helper for propagated version comparison for resource types.
 	comparisonHelper util.ComparisonHelper
 
+	// federatedreplicasetstatus records the status of federated
+	// replica sets
+	fedRepSetStatus status.StatusV1alpha1Interface
+
 	// Work queue allowing parallel processing of resources
 	workQueue workqueue.Interface
 
@@ -138,6 +145,7 @@ func newFederationSyncController(typeConfig typeconfig.Interface, kubeConfig *re
 	userAgent := fmt.Sprintf("%s-controller", strings.ToLower(templateAPIResource.Kind))
 	// Initialize non-dynamic clients first to avoid polluting config
 	restclient.AddUserAgent(kubeConfig, userAgent)
+	fedRepSetStatus := status.NewForConfigOrDie(kubeConfig)
 	fedClient := fedclientset.NewForConfigOrDie(kubeConfig)
 	kubeClient := kubeclientset.NewForConfigOrDie(kubeConfig)
 	crClient := crclientset.NewForConfigOrDie(kubeConfig)
@@ -163,6 +171,7 @@ func newFederationSyncController(typeConfig typeconfig.Interface, kubeConfig *re
 		backoff:                 flowcontrol.NewBackOff(5*time.Second, time.Minute),
 		eventRecorder:           recorder,
 		typeConfig:              typeConfig,
+		fedRepSetStatus:         fedRepSetStatus,
 		fedClient:               fedClient,
 		templateClient:          templateClient,
 		pendingVersionUpdates:   sets.String{},
@@ -306,6 +315,7 @@ func (s *FederationSyncController) minimizeLatency() {
 	s.updateTimeout = 5 * time.Second
 }
 
+// Run runs the controller
 func (s *FederationSyncController) Run(stopChan <-chan struct{}) {
 	go s.templateController.Run(stopChan)
 	if s.overrideController != nil {
@@ -475,6 +485,63 @@ func (s *FederationSyncController) reconcile(qualifiedName util.QualifiedName) u
 	if err != nil {
 		runtime.HandleError(fmt.Errorf("Failed to compute placement for %s %q: %v", templateKind, key, err))
 		return util.StatusError
+	}
+
+	//update federatedreplicasetstatus resource
+	if targetKind == "FederatedReplicaSet" {
+		_, err := s.fedRepSetStatus.FederatedReplicaSetStatuses(qualifiedName.Namespace).Get(qualifiedName.Name, metav1.GetOptions{})
+
+		if err == nil {
+
+			clusterStats := []frstatv1a1.FederatedClusterStatus{}
+
+			clusters, err := s.informer.GetReadyClusters()
+			if err != nil {
+				return util.StatusError
+			}
+
+			for _, cluster := range clusters {
+				// Get Resources for each cluster (ReplicaSets)
+				obj, exists, err := s.informer.GetTargetStore().GetByKey(cluster.Name, qualifiedName.String())
+				if err != nil {
+					glog.V(2).Infof("Unexpected error: %v, getting the cluster replicasets")
+					return util.StatusError
+				}
+				if !exists {
+					continue
+				}
+
+				repSet := obj.(*appsv1.ReplicaSet)
+
+				cStat := frstatv1a1.FederatedClusterStatus{
+					ClusterName:   cluster.Name,
+					Replicas:      repSet.Status.Replicas,
+					ReadyReplicas: repSet.Status.ReadyReplicas,
+				}
+				clusterStats = append(clusterStats, cStat)
+			}
+			stat := &frstatv1a1.FederatedReplicaSetStatus{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: qualifiedName.Namespace,
+					Name:      qualifiedName.Name,
+				},
+				Status: frstatv1a1.FederatedReplicaSetStatusStatus{
+					ClusterStatuses: clusterStats,
+				},
+			}
+			_, err = s.fedRepSetStatus.FederatedReplicaSetStatuses(namespace).UpdateStatus(stat)
+
+			if err != nil {
+				glog.V(2).Infof("Unexpected error: %v, when updating the resource")
+				return util.StatusError
+			}
+
+		} else if errors.IsNotFound(err) {
+			return util.StatusAllOK
+		} else {
+			glog.V(2).Infof("Unexpected error: %v, when selecting status resource from corresponding federatedreplicaset")
+			return util.StatusError
+		}
 	}
 
 	var override *unstructured.Unstructured
@@ -811,7 +878,7 @@ func (s *FederationSyncController) clusterOperations(selectedClusters, unselecte
 			return nil, wrappedErr
 		}
 
-		var operationType util.FederatedOperationType = ""
+		var operationType util.FederatedOperationType
 
 		if found {
 			clusterObj := clusterObj.(*unstructured.Unstructured)
@@ -911,7 +978,7 @@ func (s *FederationSyncController) objectForCluster(template, override *unstruct
 		}
 		// Retain only the target fields from the template
 		targetFields := sets.NewString("name", "namespace", "labels", "annotations")
-		for key, _ := range metadata {
+		for key := range metadata {
 			if !targetFields.Has(key) {
 				delete(metadata, key)
 			}
@@ -935,9 +1002,9 @@ func (s *FederationSyncController) objectForCluster(template, override *unstruct
 		// TODO(marun) this should be documented
 		obj.SetName(template.GetName())
 		obj.SetNamespace(template.GetNamespace())
-		targetApiResource := s.typeConfig.GetTarget()
-		obj.SetKind(targetApiResource.Kind)
-		obj.SetAPIVersion(fmt.Sprintf("%s/%s", targetApiResource.Group, targetApiResource.Version))
+		targetAPIResource := s.typeConfig.GetTarget()
+		obj.SetKind(targetAPIResource.Kind)
+		obj.SetAPIVersion(fmt.Sprintf("%s/%s", targetAPIResource.Group, targetAPIResource.Version))
 	}
 
 	if override == nil {
@@ -1013,8 +1080,8 @@ func serviceForUpdateOp(desiredObj, clusterObj *unstructured.Unstructured) (*uns
 	if !ok {
 		desiredPorts = []interface{}{}
 	}
-	for desiredIndex, _ := range desiredPorts {
-		for clusterIndex, _ := range clusterPorts {
+	for desiredIndex := range desiredPorts {
+		for clusterIndex := range clusterPorts {
 			fPort := desiredPorts[desiredIndex].(map[string]interface{})
 			cPort := clusterPorts[clusterIndex].(map[string]interface{})
 			if !(fPort["name"] == cPort["name"] && fPort["protocol"] == cPort["protocol"] && fPort["port"] == cPort["port"]) {
