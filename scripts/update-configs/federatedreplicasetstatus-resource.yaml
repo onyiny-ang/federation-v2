@@ -6,3 +6,4 @@ items:
   metadata:
     name: test-replicaset
     namespace: test-namespace
+  status: {}
