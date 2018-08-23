@@ -4,7 +4,7 @@ metadata:
   creationTimestamp: null
   labels:
     api: federation
-    kubebuilder.k8s.io: 0.1.12
+    kubebuilder.k8s.io: 1.0.0
   name: federatedreplicasetstatuses.status.federation.k8s.io
 spec:
   group: status.federation.k8s.io
@@ -12,6 +12,8 @@ spec:
     kind: FederatedReplicaSetStatus
     plural: federatedreplicasetstatuses
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -40,8 +42,8 @@ spec:
                   replicas:
                     type: integer
                     format: int32
-          required:
-          - replicas
+              required:
+              - replicas
   version: v1alpha1
 status:
   acceptedNames:
