@@ -20,8 +20,8 @@ versions of minikube (>= `0.30.0`) will satisfy this requirement.
 Once you have minikube installed run:
 
 ```bash
-minikube start -p cluster1 --kubernetes-version v1.11.0
-minikube start -p cluster2 --kubernetes-version v1.11.0
+minikube start --vm-driver kvm -p cluster1 --kubernetes-version v1.11.0
+minikube start --vm-driver kvm -p cluster2 --kubernetes-version v1.11.0
 ```
 
 Even though the `minikube` cluster has been started, you'll want to verify all
