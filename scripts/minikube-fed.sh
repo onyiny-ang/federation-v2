@@ -1,10 +1,4 @@
 #!/bin/bash
-#==========================================================
-#  Script name -- minikube-fed.sh --  DESCRIPTION:
-#
-#
-#  Author:  Lindsey Tulloch , ltulloch@redhat.com
-#  CREATED:  2018-06-12 10:42:51 AM EDT
 
 set -o errexit
 set -o nounset
@@ -13,6 +7,10 @@ set -o pipefail
 #source "$(dirname "${BASH_SOURCE}")"
 export GOPATH=~/src/v2
 export GOBIN=~/src/v2/bin
+
+CONTEXT="us-east"
+CONTEXT2="eu-central"
+CONTEXT3="ap-north"
 
 kubectl config use-context us-east
 

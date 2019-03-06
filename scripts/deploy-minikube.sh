@@ -29,8 +29,6 @@ export PATH=$PATH:/usr/local/apiserver-builder/bin
 export GOPATH=~/src/v2
 export GOBIN=~/src/v2/bin
 
-NS=federation
-
 CONTEXT="us-east"
 CONTEXT2="eu-central"
 CONTEXT3="ap-north"
