@@ -29,7 +29,6 @@ kubectl create -f ./configs/federatednamespace.yaml
 kubectl create -f ./configs/federatedconfigmap.yaml
 kubectl create -f ./configs/federateddeployment.yaml
 kubectl create -f ./configs/federatedsecret.yaml
-kubectl create -f ./configs/federatedservice.yaml
 
 read -n 1 -s
 
@@ -45,17 +44,6 @@ printf "**Deployments for existing contexts**\n"
 read -n 1 -s
 for i in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do echo; echo ------------ ${i} ------------; echo; kubectl --context ${i}  --namespace ${NS} get deployments; echo; echo; done
 read -n 1 -s
-
-for i in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do echo; echo ------------ ${i} ------------; echo; kubectl --context ${i}  --namespace ${NS} get service; echo; echo; done
-read -n 1 -s
-
-for c in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do
-    NODE_PORT=$(kubectl --context=${c} -n test-namespace get service \
-        test-service -o jsonpath='{.spec.ports[0].nodePort}')
-    echo; echo ------------ ${c} ------------; echo
-    curl $(echo -n $(minikube ip -p ${c})):${NODE_PORT}
-    echo; echo
-done
 
 sleep 5s
 read -n 1 -s
@@ -96,7 +84,7 @@ kubectl -n ${NS} edit federateddeployment
 sleep 7s
 
 printf "\n**Deployments showing us-east restored**\n"
-while ! [ $replicas -eq 5 ]; do
+while ! [ $replicas -eq 3 ]; do
   printf "\n\t***********\n"
   replicas=$(kubectl --context us-east -n ${NS} get deployments -o json | jq -r '.items[].status.readyReplicas')
   if [ -z "$replicas" ]; then
@@ -115,9 +103,6 @@ read -n 1 -s
 printf "**Deployments for existing contexts**\n"
 read -n 1 -s
 for i in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do echo; echo ------------ ${i} ------------; echo; kubectl --context ${i}  --namespace ${NS} get deployments; echo; echo; done
-read -n 1 -s
-
-for i in ${CONTEXT} ${CONTEXT2} ${CONTEXT3}; do echo; echo ------------ ${i} ------------; echo; kubectl --context ${i}  --namespace ${NS} get service; echo; echo; done
 read -n 1 -s
 
 
